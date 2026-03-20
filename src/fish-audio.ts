@@ -15,9 +15,9 @@ const FISH_API_BASE = "https://api.fish.audio";
 // Tools
 // ---------------------------------------------------------------------------
 
-export const listFishVoices = tool({
-  description: `List available Fish Audio voice models. Use to find reference_id values.
-Requires FISH_API_KEY environment variable.`,
+export function createListFishVoices(apiKey: string) {
+  return tool({
+  description: `List available Fish Audio voice models. Use to find reference_id values.`,
   args: {
     page: tool.schema
       .number()
@@ -33,11 +33,6 @@ Requires FISH_API_KEY environment variable.`,
       .describe("Filter by model title keyword."),
   },
   async execute(args) {
-    const apiKey = process.env.FISH_API_KEY;
-    if (!apiKey) {
-      return "Error: FISH_API_KEY environment variable is not set. Get a key from https://fish.audio/";
-    }
-
     const params = new URLSearchParams();
     params.set("page", String(args.page ?? 1));
     params.set("page_size", String(args.page_size ?? 20));
@@ -73,12 +68,13 @@ Requires FISH_API_KEY environment variable.`,
       ...lines,
     ].join("\n");
   },
-});
+  });
+}
 
-export const generateVoiceFish = tool({
+export function createGenerateVoiceFish(apiKey: string) {
+  return tool({
   description: `Generate speech using Fish Audio TTS. Best for Chinese.
-Converts text to audio and saves the file.
-Requires FISH_API_KEY environment variable.`,
+Converts text to audio and saves the file.`,
   args: {
     text: tool.schema.string().describe("The text to convert to speech."),
     reference_id: tool.schema
@@ -101,11 +97,6 @@ Requires FISH_API_KEY environment variable.`,
       .describe("Audio bitrate in kbps. Defaults to 128."),
   },
   async execute(args, ctx) {
-    const apiKey = process.env.FISH_API_KEY;
-    if (!apiKey) {
-      return "Error: FISH_API_KEY environment variable is not set. Get a key from https://fish.audio/";
-    }
-
     const format = args.format ?? "mp3";
 
     ctx.metadata({ title: `Fish TTS: ${args.filename}` });
@@ -158,4 +149,5 @@ Requires FISH_API_KEY environment variable.`,
       `  Format: ${format} | Model: s2-pro`,
     ].join("\n");
   },
-});
+  });
+}

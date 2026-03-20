@@ -17,11 +17,11 @@ const MAX_POLLS = 30; // 5 minutes max wait
 // Tool definition
 // ---------------------------------------------------------------------------
 
-export const generateMusic = tool({
+export function createGenerateMusic(apiKey: string) {
+  return tool({
   description: `Generate AI music using Suno AI.
 Provide a text prompt describing the music and a style/genre tag.
-Saves generated audio files to the specified output directory.
-Requires SUNO_API_KEY environment variable.`,
+Saves generated audio files to the specified output directory.`,
   args: {
     track_id: tool.schema
       .string()
@@ -54,11 +54,6 @@ Requires SUNO_API_KEY environment variable.`,
       .describe('Suno model version. Options: "V4", "V4_5", "V4_5ALL". Defaults to "V4_5ALL".'),
   },
   async execute(args, ctx) {
-    const apiKey = process.env.SUNO_API_KEY;
-    if (!apiKey) {
-      return "Error: SUNO_API_KEY environment variable is not set. Get a key from https://sunoapi.org/";
-    }
-
     const instrumental = args.instrumental !== false;
     const model = args.model ?? "V4_5ALL";
     const title = args.track_id.replace(/_/g, " ");
@@ -171,4 +166,5 @@ Requires SUNO_API_KEY environment variable.`,
       `  Model: ${model}`,
     ].join("\n");
   },
-});
+  });
+}
