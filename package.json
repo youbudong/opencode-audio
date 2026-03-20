@@ -1,0 +1,41 @@
+{
+  "name": "opencode-audio",
+  "version": "0.1.0",
+  "description": "OpenCode plugin for AI audio generation — music (Suno) and TTS (ElevenLabs, Fish Audio)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "audio",
+    "music",
+    "tts",
+    "suno",
+    "elevenlabs",
+    "fish-audio"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.2.27",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}
