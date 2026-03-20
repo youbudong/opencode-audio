@@ -2,7 +2,7 @@
 /// Provides AI music generation (Suno) and text-to-speech (ElevenLabs, Fish Audio).
 
 import type { Plugin } from "@opencode-ai/plugin";
-import { createGenerateMusic } from "./suno.js";
+import { createGenerateMusic, createDownloadMusic } from "./suno.js";
 import { createGenerateVoiceElevenLabs, createListElevenLabsVoices } from "./elevenlabs.js";
 import { createGenerateVoiceFish, createListFishVoices } from "./fish-audio.js";
 
@@ -14,6 +14,7 @@ export const AudioPlugin: Plugin = async (_ctx) => {
   return {
     tool: {
       generate_music: createGenerateMusic(sunoApiKey),
+      download_music: createDownloadMusic(sunoApiKey),
       generate_voice_elevenlabs: createGenerateVoiceElevenLabs(elevenLabsApiKey),
       list_elevenlabs_voices: createListElevenLabsVoices(elevenLabsApiKey),
       generate_voice_fish: createGenerateVoiceFish(fishApiKey),

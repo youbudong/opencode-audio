@@ -1,6 +1,6 @@
 {
   "name": "opencode-audio",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "OpenCode plugin for AI audio generation — music (Suno) and TTS (ElevenLabs, Fish Audio)",
   "type": "module",
   "main": "dist/index.js",

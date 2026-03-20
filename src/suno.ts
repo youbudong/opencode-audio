@@ -115,14 +115,14 @@ Saves generated audio files to the specified output directory.`,
       const pollData = (await pollResponse.json()) as {
         data: {
           status: string;
-          response?: { data?: Array<{ audio_url: string; duration: number }> };
+          response?: { sunoData?: Array<{ audioUrl: string; streamAudioUrl: string; duration: number }> };
         };
       };
 
-      if (pollData.data.status === "SUCCESS") {
-        const tracks = pollData.data.response?.data;
+      if (pollData.data.status === "SUCCESS" || pollData.data.status === "CALLBACK_EXCEPTION") {
+        const tracks = pollData.data.response?.sunoData;
         if (tracks && tracks.length > 0) {
-          audioUrl = tracks[0].audio_url;
+          audioUrl = tracks[0].audioUrl;
           duration = tracks[0].duration;
         }
         break;
@@ -167,5 +167,120 @@ Saves generated audio files to the specified output directory.`,
       `  Model: ${model}`,
     ].join("\n");
   },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Download Music tool (retrieve previously generated tracks by taskId)
+// ---------------------------------------------------------------------------
+
+export function createDownloadMusic(apiKey: string) {
+  return tool({
+    description: `Download previously generated Suno music by task ID.
+Use this to retrieve music from a prior generate_music task, especially if it timed out.
+Queries the task status and downloads the audio if generation completed.`,
+    args: {
+      task_id: tool.schema
+        .string()
+        .describe("The Suno task ID returned from a previous generate_music call."),
+      filename: tool.schema
+        .string()
+        .describe("Output filename without extension."),
+      output_dir: tool.schema
+        .string()
+        .optional()
+        .describe("Output directory relative to project root. Defaults to project root."),
+      track_index: tool.schema
+        .number()
+        .optional()
+        .describe("Which track to download (0 or 1). Suno generates 2 tracks per request. Defaults to 0."),
+    },
+    async execute(args, ctx) {
+      ctx.metadata({ title: `Checking: ${args.task_id}` });
+
+      const response = await fetch(
+        `${SUNO_API_BASE}/generate/record-info?taskId=${args.task_id}`,
+        { headers: { Authorization: `Bearer ${apiKey}` } }
+      );
+
+      if (!response.ok) {
+        const err = await response.text();
+        return `Error: Suno API (${response.status}): ${err}`;
+      }
+
+      const data = (await response.json()) as {
+        data: {
+          status: string;
+          response?: {
+            sunoData?: Array<{
+              id: string;
+              audioUrl: string;
+              streamAudioUrl: string;
+              title: string;
+              tags: string;
+              duration: number;
+            }>;
+          };
+        };
+      };
+
+      const status = data.data.status;
+      if (status === "PENDING" || status === "TEXT_SUCCESS" || status === "FIRST_SUCCESS") {
+        return `Task ${args.task_id} is still processing (status: ${status}). Try again later.`;
+      }
+
+      if (status !== "SUCCESS" && status !== "CALLBACK_EXCEPTION") {
+        return `Error: Task ${args.task_id} failed (status: ${status}).`;
+      }
+
+      const tracks = data.data.response?.sunoData;
+      if (!tracks || tracks.length === 0) {
+        return `Error: No tracks found for task ${args.task_id}.`;
+      }
+
+      const idx = args.track_index ?? 0;
+      if (idx < 0 || idx >= tracks.length) {
+        return `Error: track_index ${idx} out of range. Available: 0-${tracks.length - 1}.`;
+      }
+
+      const track = tracks[idx];
+      const audioUrl = track.audioUrl;
+      if (!audioUrl) {
+        return `Error: Track ${idx} has no audio URL yet. Status: ${status}`;
+      }
+
+      ctx.metadata({ title: `Downloading: ${args.filename}` });
+
+      const audioResponse = await fetch(audioUrl);
+      if (!audioResponse.ok) {
+        return `Error: Failed to download audio (${audioResponse.status})`;
+      }
+
+      const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+
+      const outputDir = args.output_dir
+        ? join(ctx.worktree, args.output_dir)
+        : ctx.worktree;
+      await mkdir(outputDir, { recursive: true });
+
+      const outputPath = join(outputDir, `${args.filename}.mp3`);
+      await writeFile(outputPath, audioBuffer);
+
+      const relPath = args.output_dir
+        ? `${args.output_dir}/${args.filename}.mp3`
+        : `${args.filename}.mp3`;
+
+      ctx.metadata({ title: `Done: ${args.filename}` });
+
+      return [
+        `Music downloaded.`,
+        `  File: ${relPath}`,
+        `  Size: ${(audioBuffer.length / 1024).toFixed(1)} KB`,
+        `  Duration: ${track.duration ? `${Math.round(track.duration)}s` : "unknown"}`,
+        `  Title: ${track.title}`,
+        `  Tags: ${track.tags}`,
+        `  Tracks available: ${tracks.length} (downloaded index ${idx})`,
+      ].join("\n");
+    },
   });
 }
