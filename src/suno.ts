@@ -74,6 +74,7 @@ Saves generated audio files to the specified output directory.`,
         title,
         instrumental,
         model,
+        callBackUrl: "https://localhost/no-op",
       }),
     });
 
