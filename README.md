@@ -7,6 +7,7 @@ An [OpenCode](https://opencode.ai) plugin that adds AI audio generation tools â€
 | Tool | Description |
 |------|-------------|
 | `generate_music` | Generate AI music with Suno (async polling, saves `.mp3`) |
+| `download_music` | Download previously generated Suno music by task ID |
 | `generate_voice_elevenlabs` | Text-to-speech with ElevenLabs (multilingual) |
 | `list_elevenlabs_voices` | Browse available ElevenLabs voices |
 | `generate_voice_fish` | Text-to-speech with Fish Audio (best for Chinese) |
@@ -53,7 +54,7 @@ ELEVENLABS_API_KEY=your-key-here  # https://elevenlabs.io
 FISH_API_KEY=your-key-here        # https://fish.audio
 ```
 
-Each tool checks for its required key at runtime and returns a helpful error if missing.
+Each tool requires its corresponding API key to be set as an environment variable. Keys are read once when the plugin loads.
 
 ## Usage
 
@@ -72,7 +73,20 @@ The `generate_music` tool accepts:
 | `style` | Yes | Genre/style tags (e.g. `"epic orchestral, cinematic, 90 bpm"`) |
 | `output_dir` | No | Output directory relative to project root |
 | `instrumental` | No | Instrumental only, no vocals (default: `true`) |
-| `model` | No | Suno model: `"V4"`, `"V4_5"`, `"V4_5ALL"` (default: `"V4_5ALL"`) |
+| `model` | No | Suno model: `"V4"`, `"V4_5"`, `"V4_5PLUS"`, `"V4_5ALL"`, `"V5"` (default: `"V4_5ALL"`) |
+
+### Download music
+
+> Download the music from task abc123, save to assets/audio/
+
+Use `download_music` to retrieve tracks from a previous `generate_music` call â€” especially useful if the original request timed out. Suno generates 2 tracks per request.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `task_id` | Yes | Task ID returned from a previous `generate_music` call |
+| `filename` | Yes | Output filename (without extension) |
+| `output_dir` | No | Output directory relative to project root |
+| `track_index` | No | Which track to download, `0` or `1` (default: `0`) |
 
 ### Text-to-speech (ElevenLabs)
 
